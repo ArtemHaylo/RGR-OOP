@@ -4,7 +4,7 @@ import patterns.*;
 public class Main {
     public static void main(String[] args) {
         
-        VendingMachine machine = VendingMachine.getInstance(); //отримуємо єдиний екземпляр автомата
+        VendingMachine machine = VendingMachine.getInstance(); //отрмуємо єдиний екземпляр автомата
 
         ProductFactory junkFoodFactory = new JunkFoodFactory(); // створюємо фабрику нездорової їжі
         
@@ -55,7 +55,7 @@ public class Main {
             machine.selectProduct("A2"); // 0 - зараз буде помилка
         
         } catch (OutOfStockException e) {
-            System.err.println("ПЕРЕХОПЛЕНО: " + e.getMessage()); // Спрацює!
+            System.err.println("ПЕРЕХОПЛЕНО: " + e.getMessage()); 
         } catch (VendingMachineException e) {
             System.err.println("Помилка покупки: " + e.getMessage());
         }
