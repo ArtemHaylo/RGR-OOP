@@ -1,4 +1,3 @@
-// Файл: patterns/VendingMachine.java
 package patterns;
 
 import exceptions.InsufficientFundsException;
@@ -6,15 +5,6 @@ import exceptions.VendingMachineException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
-
- * 4. GRASP: Information Expert + High Cohesion
- * 'VendingMachine' є експертом по 'slots' та 'currentBalance'.
- * Він знає все про процес продажу.
- * Водночас він не знає, як створюється 'Product' (це робить Factory)
- * або скільки 'quantity' у 'Slot' (це знає Slot).
- * Це і є High Cohesion (Висока зв'язність).
- */
 public class VendingMachine {
 
     private static VendingMachine instance; //Singletone, тут ми гарантуємо, що в системі буде лише один екзмепляр автомата
