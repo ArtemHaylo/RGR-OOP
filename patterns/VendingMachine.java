@@ -1,16 +1,14 @@
 package patterns;
 
 import exceptions.InsufficientFundsException;
-import exceptions.VendingMachineException;
 import exceptions.OutOfStockException;
-
-import java.util.Collections;
+import exceptions.VendingMachineException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class VendingMachine {
 
-    private static volatile VendingMachine instance;
+    private static volatile VendingMachine instance; // потокобезопасный синглтон
     private final Map<String, Slot> slots;
     private double currentBalance;
 
@@ -19,7 +17,6 @@ public class VendingMachine {
         this.currentBalance = 0;
     }
 
-    // Thread-safe singleton (double-checked)
     public static VendingMachine getInstance() {
         if (instance == null) {
             synchronized (VendingMachine.class) {
@@ -31,86 +28,79 @@ public class VendingMachine {
         return instance;
     }
 
-    // Добавлен для тестов и инициализации
-    public void reset() {
-        synchronized (this) {
-            slots.clear();
-            currentBalance = 0;
+    // Загружаем слот; код нормализуется в верхний регистр
+    public synchronized void loadSlot(String code, Slot slot) {
+        if (code == null || slot == null) {
+            System.err.println("Невірні аргументи для loadSlot");
+            return;
         }
+        String key = code.trim().toUpperCase();
+        slots.put(key, slot);
+        System.out.println("Завантажено комірку " + key + ": " + slot.getProduct().getName());
     }
 
-    public void loadSlot(String code, Slot slot) {
-        if (code == null || code.isBlank()) {
-            throw new IllegalArgumentException("Код слоту не може бути пустим");
+    // Очищает автомат (Main вызывал reset() при старте)
+    public synchronized void reset() {
+        slots.clear();
+        currentBalance = 0;
+        System.out.println("Вендінг-автомат очищено.");
+    }
+
+    // Внос грошей с валидацией
+    public synchronized void insertMoney(double amount) throws VendingMachineException {
+        if (amount <= 0) {
+            throw new VendingMachineException("Сума для внесення повинна бути більшою за 0");
         }
-        if (slot == null) {
-            throw new IllegalArgumentException("Slot не може бути null");
-        }
-        slots.put(code, slot);
-        System.out.println("Завантажено комірку " + code + ": " + slot.getProduct().getName());
+        currentBalance += amount;
+        System.out.println("Внесено: " + amount + " грн. Поточний баланс: " + currentBalance + " грн.");
     }
 
-    public synchronized void insertMoney(double amount) {
-    if (amount <= 0) {
-        throw new IllegalArgumentException("Сума має бути додатною.");
-    }
-    currentBalance += amount;
-    System.out.println("Внесено: " + amount + " грн. Баланс: " + currentBalance);
-    }
-
-
+    // Выбор товара — теперь бросаем исключения вместо тихого println
     public synchronized void selectProduct(String code) throws VendingMachineException {
-    Slot slot = slots.get(code);
-
-    if (slot == null)
-        throw new VendingMachineException("Комірки не існує: " + code);
-
-    double price = slot.getPrice();
-
-    if (currentBalance < price)
-        throw new InsufficientFundsException(price, currentBalance);
-
-    public synchronized void dispense() throws OutOfStockException {
-        if (quantity > 0) {
-        quantity--;
-        System.out.println("Видано: " + product.getName());
-    } else {
-        throw new OutOfStockException(product.getName());
-    }
-    }
-
-
-    currentBalance -= price;
-    System.out.println("Покупка успішна. Новий баланс: " + currentBalance);
-    }
-
-
-    public synchronized double getChange() {
-    double change = currentBalance;
-    currentBalance = 0;
-    return change;
-    }
-
-
-    public double getBalance() {
-        synchronized (this) {
-            return currentBalance;
+        if (code == null || code.trim().isEmpty()) {
+            throw new VendingMachineException("Невірний код товару");
         }
+        String key = code.trim().toUpperCase();
+        Slot slot = slots.get(key);
+
+        if (slot == null) {
+            throw new VendingMachineException("Невірна комірка: " + key);
+        }
+
+        double price = slot.getPrice();
+
+        if (currentBalance < price) {
+            throw new InsufficientFundsException(price, currentBalance);
+        }
+
+        try {
+            slot.dispense();
+        } catch (OutOfStockException e) {
+            // передаём дальше как VendingMachineException (OutOfStockException — специфичне виключення)
+            throw e;
+        }
+
+        currentBalance -= price;
+        System.out.println("Покупка успішна. Залишок: " + currentBalance + " грн.");
     }
 
-    public Slot getSlot(String code) {
-        return slots.get(code);
+    // Вернуть сдачу
+    public synchronized double getChange() {
+        double change = currentBalance;
+        currentBalance = 0;
+        return change;
     }
 
-    public Map<String, Slot> getAllSlots() {
-        return Collections.unmodifiableMap(slots);
+    // Геттер баланса, Main использует его для информирования пользователя
+    public synchronized double getCurrentBalance() {
+        return currentBalance;
     }
 
-    public void displayAllProducts() {
+    public synchronized void displayAllProducts() {
         System.out.println("\n--- Асортимент ---");
         for (Map.Entry<String, Slot> entry : slots.entrySet()) {
             String info = entry.getValue().getProduct().getDisplayInfo();
-            System.out.println("[" + entry.getKey() + "] " + info + " (кількість: " + entry.getValue().getQuantity() + ")");
+            System.out.println("[" + entry.getKey() + "] " + info);
         }
         System.out.println("------------------\n");
     }
