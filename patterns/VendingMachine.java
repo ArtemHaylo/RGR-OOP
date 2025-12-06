@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class VendingMachine {
-
     private static volatile VendingMachine instance; // потокобезопасный синглтон
     private final Map<String, Slot> slots;
     private double currentBalance;
@@ -76,7 +75,7 @@ public class VendingMachine {
         try {
             slot.dispense();
         } catch (OutOfStockException e) {
-            // передаём дальше как VendingMachineException (OutOfStockException — специфичне виключення)
+            // передаём дальше как специфичное исключение
             throw e;
         }
 
@@ -103,5 +102,30 @@ public class VendingMachine {
             System.out.println("[" + entry.getKey() + "] " + info);
         }
         System.out.println("------------------\n");
+    }
+
+    // Возвращает объект слота по коду (или null, если нет)
+    public synchronized Slot getSlot(String code) {
+        if (code == null) return null;
+        return slots.get(code.trim().toUpperCase());
+    }
+
+    // Новая функциональность: суммарное количество товаров во всех слотах
+    public synchronized int getTotalProductCount() {
+        int total = 0;
+        for (Slot s : slots.values()) {
+            total += s.getQuantity();
+        }
+        return total;
+    }
+
+    // Печатает общее количество товаров и разбивку по слотам
+    public synchronized void displayProductCounts() {
+        System.out.println("\n--- Количество товаров в автомате ---");
+        System.out.println("Общее количество: " + getTotalProductCount());
+        for (Map.Entry<String, Slot> e : slots.entrySet()) {
+            System.out.println("[" + e.getKey() + "] " + e.getValue().getProduct().getName() + " — " + e.getValue().getQuantity());
+        }
+        System.out.println("--------------------------------------\n");
     }
 }
