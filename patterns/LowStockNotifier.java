@@ -1,4 +1,4 @@
-package patterns.observer;
+package patterns;
 
 /**
  * Простий спостерігач, який виводить повідомлення про низький запас.

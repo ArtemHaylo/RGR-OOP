@@ -1,4 +1,4 @@
-package patterns.observer;
+package patterns;
 
 /**
  * Інтерфейс спостерігача за запасами.

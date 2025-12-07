@@ -1,4 +1,4 @@
-package patterns.payment;
+package patterns;
 
 /**
  * Інтерфейс платіжної стратегії.

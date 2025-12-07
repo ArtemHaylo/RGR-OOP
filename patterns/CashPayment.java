@@ -1,5 +1,5 @@
-package patterns.payment;
-
+package patterns;
+import patterns.PaymentStrategy;
 /**
  * Проста реалізація готівкової оплати.
  * У нашому прикладі це просто заглушка — реальна логіка зберігається у VendingMachine (баланс).
